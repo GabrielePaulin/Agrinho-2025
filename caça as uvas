@@ -1,0 +1,113 @@
+let farmer;
+let grapes = [];
+const numGrapes = 20; // número de uvas na plantação
+const moveSpeed = 8; // velocidade do fazendeiro
+let startTime;
+const gameDuration = 60; // duração do jogo em segundos
+let gameOver = false;
+let victory = false;
+
+function setup() {
+  createCanvas(600, 400);
+  
+  // posição inicial do fazendeiro
+  farmer = {
+    x: width / 2,
+    y: height / 2,
+    size: 40
+  };
+  
+  // gerar uvas em posições aleatórias
+  for (let i = 0; i < numGrapes; i++) {
+    grapes.push({
+      x: random(50, width - 50),
+      y: random(50, height - 50),
+      size: 30,
+      visible: true
+    });
+  }
+  
+  startTime = millis(); // tempo de início
+}
+
+function draw() {
+  background(220);
+  
+  // calcular o tempo decorrido
+  let elapsedSeconds = (millis() - startTime) / 1000;
+  let timeLeft = max(0, gameDuration - elapsedSeconds);
+  
+  // verificar se o tempo acabou
+  if (timeLeft <= 0 && !victory) {
+    gameOver = true;
+  }
+  
+  // desenhar uvas
+  for (let grape of grapes) {
+    if (grape.visible) {
+      textSize(grape.size);
+      text('🍇', grape.x - grape.size / 4, grape.y + grape.size / 4);
+    }
+  }
+  
+  // desenhar fazendeiro
+  fill(0);
+  textSize(farmer.size);
+  text('👩‍🌾', farmer.x - farmer.size / 4, farmer.y + farmer.size / 4);
+  
+  // desenhar o tempo restante
+  fill(0);
+  textSize(20);
+  textAlign(LEFT, TOP);
+  text('Tempo: ' + timeLeft.toFixed(1) + 's', 10, 10);
+  
+  // verificar vitória
+  const remainingGrapes = grapes.filter(g => g.visible).length;
+  if (remainingGrapes === 0) {
+    victory = true;
+  }
+  
+  // exibir mensagens de fim de jogo
+  if (gameOver && !victory) {
+    fill(255, 0, 0);
+    textSize(40);
+    textAlign(CENTER, CENTER);
+    text('Game Over', width / 2, height / 2);
+  } else if (victory) {
+    fill(0, 255, 0);
+    textSize(40);
+    textAlign(CENTER, CENTER);
+    text('Victory!', width / 2, height / 2);
+  }
+}
+
+function keyPressed() {
+  // impedir movimentação se o jogo estiver terminado
+  if (gameOver || victory) {
+    return;
+  }
+
+  // movimentação do fazendeiro
+  if (key === 'W' || key === 'w') {
+    farmer.y = max(farmer.y - moveSpeed, farmer.size / 2); // limite superior
+  } else if (key === 'S' || key === 's') {
+    farmer.y = min(farmer.y + moveSpeed, height - farmer.size / 2); // limite inferior
+  } else if (key === 'A' || key === 'a') {
+    farmer.x = max(farmer.x - moveSpeed, farmer.size / 2); // limite esquerdo
+  } else if (key === 'D' || key === 'd') {
+    farmer.x = min(farmer.x + moveSpeed, width - farmer.size / 2); // limite direito
+  }
+  
+  // coletar uvas com a tecla J
+  if (key === 'J' || key === 'j') {
+    for (let grape of grapes) {
+      if (grape.visible) {
+        // verificar se o fazendeiro está perto da uva
+        let d = dist(farmer.x, farmer.y, grape.x, grape.y);
+        if (d < grape.size) {
+          grape.visible = false; // remover a uva
+        }
+      }
+    }
+  }
+}
